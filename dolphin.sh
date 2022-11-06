@@ -61,7 +61,6 @@ getsomehelp() {
 	7. Even you're not doing it now, running this file with 'sh' will not work, using 'bash' is a must
 	8. It is crucial you are connected to the internet at all times while running this script"
 	echo
-	commands
 }
 build() {
 	cmake /home/$(whoami)/dolphin-emu
@@ -70,7 +69,7 @@ build() {
 specificversion() {
 	cd /home/$(whoami)/dolphin-emu/
 	echo 'Downloading commit code version...'
-	git reset --hard $commit_code
+	git reset --hard --recurse-submodules $commit_code
 }
 declare -A pkgmng;
 pkgmng[/etc/redhat-release]=yum
