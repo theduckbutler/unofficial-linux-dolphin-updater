@@ -3,6 +3,8 @@ Have you ever wanted to switch to a specific version of Dolphin to play with fri
 
 Well now you can!
 
-I've written a relatively simple bash script to do just that! Download the .sh file here dolphin(v1.4).sh, and store it somewhere on your computer. Whenever you have the desire to update(or even downgrade if you feel like it), simply run the script using bash, NOT SH.
+I've written a relatively simple bash script to do just that! Whenever you have the desire to update(or even downgrade if you feel like it), simply run the script.
 
 The only prerequisites needed are Dolphin(obviously), but it must be built and compiled as described on the official 'Building Dolphin for Linux' page, with the folder containing Dolphin being named 'dolphin-emu' and the build folder named 'Build', as described in the instructions. The script will also install curl the first time you run it, if you don't already have curl installed.
+
+For first time use, run the script however you please, whether with an alias or not, with the arugument '-h' for a list of instructions and other arguments.
