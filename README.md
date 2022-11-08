@@ -7,4 +7,4 @@ I've written a relatively simple bash script to do just that! Whenever you have 
 
 The only prerequisites needed are Dolphin(obviously), but it must be built and compiled as described on the official 'Building Dolphin for Linux' page, with the folder containing Dolphin being named 'dolphin-emu' and the build folder named 'Build', as described in the instructions. The script will also install curl the first time you run it, if you don't already have curl installed.
 
-For first time use, run the script however you please, whether with an alias or not, with the arugument '-h' for a list of instructions and other arguments.
+For first time use, run the script however you please, whether with an alias or not, with the argument '-h' for a list of instructions and other arguments.
