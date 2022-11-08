@@ -1,11 +1,17 @@
 #!/bin/bash
-if [[ "$FIRST_RUN" == "" ]]; then
-	FIRST_RUN=no
-	export FIRST_RUN
-	if ! [[ "`cat /home/$(whoami)/dolphin-emu/.git/refs/heads/master`" == "`wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 67-106`" ]]; then
+if ! [[ "`cat /home/$(whoami)/dolphin-emu/.git/refs/heads/master`" == "`wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 67-106`" ]]; then
+	new_beta="`wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 67-106`"
+	#echo "There is a new beta(official) version available!"
+	else
+		new_beta='0'
+fi
+#echo "$new_beta"
+new_beta()
+{
+	if ! [ $new_beta == '0' ]; then
 		echo "There is a new beta(official) version available!"
 	fi
-fi
+}
 version() {
 	current_version_commit="`cat /home/$(whoami)/dolphin-emu/.git/refs/heads/master`"
 	echo "`wget --output-document=- https://dolphin-emu.org/download/dev/$current_version_commit/ 2>/dev/null \ | grep 'Information for' | cut -c 25-33`"
@@ -132,10 +138,14 @@ while getopts ":h(help):lc:u:v:" option; do
 		c)
 			if [[ $OPTARG == "dev" || $OPTARG == "development" ]];
 				then
+					new_beta
+					echo "The most recent dev commit hash is:"
 					version= wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'version always-ltr' | head -6 | tail -1 | cut -c 67-106
 				else
 					if [[ $OPTARG == "beta" ]];
 						then
+							new_beta
+							echo "The most recent beta(official) commit hash is:"
 							version= wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 67-106
 						else
 							echo "Error: Invalid option"
@@ -145,10 +155,14 @@ while getopts ":h(help):lc:u:v:" option; do
 		v)
 			if [[ $OPTARG == "dev" || $OPTARG == "development" ]];
 				then
+					new_beta
+					echo "The most recent dev version is:"
 					version= wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'Download the latest version of the Dolphin Emulator' -m 1 | cut -c 96-104
 				else
 					if [[ $OPTARG == "beta" ]];
 						then
+							new_beta
+							echo "The most recent beta(official) version:"
 							version= wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 110-118
 						else
 							echo "Error: Invalid option"
@@ -156,6 +170,8 @@ while getopts ":h(help):lc:u:v:" option; do
 			fi
 			;;
 		l)
+			new_beta
+			echo "The current local version is:"
 			version
 			exit;;
 		\?)
