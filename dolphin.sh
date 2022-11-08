@@ -1,11 +1,9 @@
 #!/bin/bash
 if ! [[ "`cat /home/$(whoami)/dolphin-emu/.git/refs/heads/master`" == "`wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 67-106`" ]]; then
 	new_beta="`wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 67-106`"
-	#echo "There is a new beta(official) version available!"
 	else
 		new_beta='0'
 fi
-#echo "$new_beta"
 new_beta()
 {
 	if ! [ $new_beta == '0' ]; then
@@ -14,7 +12,7 @@ new_beta()
 }
 version() {
 	current_version_commit="`cat /home/$(whoami)/dolphin-emu/.git/refs/heads/master`"
-	echo "`wget --output-document=- https://dolphin-emu.org/download/dev/$current_version_commit/ 2>/dev/null \ | grep 'Information for' | cut -c 25-33`"
+	current_version="`wget --output-document=- https://dolphin-emu.org/download/dev/$current_version_commit/ 2>/dev/null \ | grep 'Information for' | cut -c 25-33`"
 }
 proceed() {
 	exec bash "${BASH_SOURCE}"
@@ -27,6 +25,7 @@ current_check() {
 }
 commands() {
 	echo "Commands:
+	-h: returns the help message
 	-c (dev or beta): returns the commit hash of the specified, most recent version
 	-v (dev or beta): returns the version of the specified, most recent version
 	-l: returns the current local version
@@ -78,6 +77,7 @@ do-it()
 	build && echo 'Compiled successfully.'
 	sudo make install
 	echo 'Installation success!'
+	echo "Current local version: $current_version" 
 }
 declare -A pkgmng;
 pkgmng[/etc/redhat-release]=yum
@@ -110,6 +110,7 @@ do
 			fi
    	fi
 done
+version
 while getopts ":h(help):lc:u:v:" option; do
 	case $option in
 		h)
@@ -139,14 +140,20 @@ while getopts ":h(help):lc:u:v:" option; do
 			if [[ $OPTARG == "dev" || $OPTARG == "development" ]];
 				then
 					new_beta
-					echo "The most recent dev commit hash is:"
-					version= wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'version always-ltr' | head -6 | tail -1 | cut -c 67-106
+					version="`wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'version always-ltr' | head -6 | tail -1 | cut -c 67-106`"
+					echo "The most recent development commit hash is: $version"
+					if [ $version == $current_version_commit ]; then
+						echo "This is your current version"
+					fi
 				else
 					if [[ $OPTARG == "beta" ]];
 						then
 							new_beta
-							echo "The most recent beta(official) commit hash is:"
-							version= wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 67-106
+							version="`wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 67-106`"
+							echo "The most recent beta(official) commit hash is: $version"
+							if [ $version == $current_version_commit ]; then
+								echo "This is your current version"
+							fi
 						else
 							echo "Error: Invalid option"
 					fi
@@ -156,23 +163,28 @@ while getopts ":h(help):lc:u:v:" option; do
 			if [[ $OPTARG == "dev" || $OPTARG == "development" ]];
 				then
 					new_beta
-					echo "The most recent dev version is:"
-					version= wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'Download the latest version of the Dolphin Emulator' -m 1 | cut -c 96-104
+					version="`wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'Download the latest version of the Dolphin Emulator' -m 1 | cut -c 96-104`"
+					echo "The most recent development version is: $version"
+					if [ $version == $current_version ]; then
+						echo "This is your current version"
+					fi
 				else
 					if [[ $OPTARG == "beta" ]];
 						then
 							new_beta
-							echo "The most recent beta(official) version:"
-							version= wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 110-118
+							version="`wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 110-118`"
+							echo "The most recent beta(official) version is: $version"
+							if [ $version == $current_version ]; then
+								echo "This is your current version"
+							fi
 						else
 							echo "Error: Invalid option"
 					fi
 			fi
 			;;
 		l)
-			new_beta
-			echo "The current local version is:"
 			version
+			echo "Current local version: $current_version" 
 			exit;;
 		\?)
 			echo "Error: Invalid option"
