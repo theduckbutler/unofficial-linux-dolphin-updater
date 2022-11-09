@@ -77,6 +77,7 @@ do-it()
 	build && echo 'Compiled successfully.'
 	sudo make install
 	echo 'Installation success!'
+	version
 	echo "Current local version: $current_version" 
 }
 declare -A pkgmng;
