@@ -27,7 +27,7 @@ commands() {
 	echo "Commands:
 	-h: returns the help message
 	-c (dev or beta): returns the commit hash of the specified, most recent version
-	-v (dev or beta): returns the version of the specified, most recent version
+	-v (dev or beta or commit hash): returns the version of the specified, most recent version, or of the commit hash specified
 	-l: returns the current local version
 	-u (dev or beta or commit hash): updates to most recent version of dev or beta selected, or of a specified commit hash"
 }
@@ -37,14 +37,14 @@ getsomehelp() {
 	1. Run '-u beta' to update to the most recent beta(official) version
 	or
 	2. Run '-u dev' to update to the most recent development version"
-	echo "Option 2: Input a commit code
+	echo "Option 2: Input a commit hash
 	1. Go to 'https://dolphin-emu.org/download/'
 	2. Click on the blue text to the left of the verison you want to update to
-	3. Copy the commit code listed on the page
+	3. Copy the commit hash listed on the page
 	4. Execute this file with the argument '-u (commit hash)'"
 	echo
 	echo "Troubleshooting Steps:
-	1. Make sure you have 'curl' installed on your computer
+	1. Make sure you have 'curl' and 'wget' installed on your computer
 	2. Confirm the directory in which you have your dolphin files is within your home directory and named 'dolphin-emu'
 	3. Confirm that the build directory within the dolphin directory is named 'Build'
 	4. Ensure you have copied the entire, correct commit code for the version you want
@@ -179,7 +179,16 @@ while getopts ":h(help):lc:u:v:" option; do
 								echo "This is your current version"
 							fi
 						else
-							echo "Error: Invalid option"
+							version="`wget --output-document=- https://dolphin-emu.org/download/dev/$OPTARG/ 2>/dev/null \ | grep 'Information on' | cut -c 50-65`"
+							if [[ $version == *"5.0"* || $version == *"3."* || $version == *"4."* ]];
+								then
+									while [[ $version == *"<"* ]];
+										do version="`echo "$version" | rev | cut -c2- | rev`"
+									done
+									echo "The version that corresponds with the commit hash $OPTARG is $version"
+								else
+									echo "Error: Invalid option"
+							fi
 					fi
 			fi
 			;;
