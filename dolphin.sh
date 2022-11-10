@@ -18,7 +18,7 @@ proceed() {
 	exec bash "${BASH_SOURCE}"
 }
 current_check() {
-	if [[ "`cat /home/$(whoami)/dolphin-emu/.git/refs/heads/master`" == $commit_code ]]; then
+	if [[ $current_version_commit == $commit_code ]]; then
 		echo "Already updated to selected version"
 		exit
 	fi
@@ -104,7 +104,7 @@ for f in ${!pkgmng[@]}
 do
 	if [[ -f $f ]];
 		then
-			if [[ $(dpkg-query -W -f='${Status}' curl 2>/dev/null | grep -c "ok installed") -eq 0 ]];
+			if [[ $(dpkg-query -W -f='${Status}' curl 2>/dev/null \ | grep -c "ok installed") -eq 0 ]];
 			then
 				echo "curl required for this script"
 				sudo ${pkgmng[$f]} install curl
@@ -133,7 +133,9 @@ while getopts ":h(help):lc:u:v:" option; do
 							exit
 						else
 							commit_code=$OPTARG
-							echo "$commit_code"
+							current_check
+							do_it
+							exit
 					fi
 			fi
 			;;
@@ -179,15 +181,29 @@ while getopts ":h(help):lc:u:v:" option; do
 								echo "This is your current version"
 							fi
 						else
-							version="`wget --output-document=- https://dolphin-emu.org/download/dev/$OPTARG/ 2>/dev/null \ | grep 'Information on' | cut -c 50-65`"
-							if [[ $version == *"5.0"* || $version == *"3."* || $version == *"4."* ]];
+							if [[ $OPTARG == *"."* ]];
 								then
-									while [[ $version == *"<"* ]];
-										do version="`echo "$version" | rev | cut -c2- | rev`"
+									version_pages="`curl "https://dolphin-emu.org/download/list/master/1/" 2>/dev/null \ | grep "/download/list/master/" | sed -n 'x;$p' | cut -c 40-42`"
+									for i in $( seq 1 $version_pages )
+										do
+											if [[ "`curl "https://dolphin-emu.org/download/list/master/$i/" 2>/dev/null \ | grep "/download/dev"`" == *"$OPTARG"* ]];
+												then
+													version_searched="`curl "https://dolphin-emu.org/download/list/master/$i/" 2>/dev/null \ | grep "/download/dev" | grep "$OPTARG" | cut -c 67-106`"
+													echo "The commit hash that corresponds with the version $OPTARG is $version_searched"
+													exit
+											fi
 									done
-									echo "The version that corresponds with the commit hash $OPTARG is $version"
 								else
-									echo "Error: Invalid option"
+									version="`wget --output-document=- https://dolphin-emu.org/download/dev/$OPTARG/ 2>/dev/null \ | grep 'Information on' | cut -c 50-65`"
+									if [[ $version == *"5."* || $version == *"3."* || $version == *"4."* ]];
+										then
+											while [[ $version == *"<"* ]];
+												do version="`echo "$version" | rev | cut -c2- | rev`"
+											done
+											echo "The version that corresponds with the commit hash $OPTARG is $version"
+										else
+											echo "Error: Invalid option"
+									fi
 							fi
 					fi
 			fi
