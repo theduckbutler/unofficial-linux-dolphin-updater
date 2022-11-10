@@ -1,18 +1,18 @@
 #!/bin/bash
-if ! [[ "`cat /home/$(whoami)/dolphin-emu/.git/refs/heads/master`" == "`wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 67-106`" ]]; then
-	new_beta="`wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 67-106`"
+if ! [[ "`cat /home/$(whoami)/dolphin-emu/.git/refs/heads/master`" == "`curl "https://dolphin-emu.org/download/" 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 67-106`" ]]; then
+	new_beta="`curl "https://dolphin-emu.org/download/" 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 67-106`"
 	else
 		new_beta='0'
 fi
 new_beta()
 {
-	if ! [ $new_beta == '0' ]; then
+	if ! [[ $new_beta == '0' ]]; then
 		echo "There is a new beta(official) version available!"
 	fi
 }
 version() {
 	current_version_commit="`cat /home/$(whoami)/dolphin-emu/.git/refs/heads/master`"
-	current_version="`wget --output-document=- https://dolphin-emu.org/download/dev/$current_version_commit/ 2>/dev/null \ | grep 'Information for' | cut -c 25-33`"
+	current_version="`curl "https://dolphin-emu.org/download/dev/$current_version_commit/" 2>/dev/null \ | grep 'Information for' | cut -c 25-33`"
 }
 proceed() {
 	exec bash "${BASH_SOURCE}"
@@ -27,7 +27,7 @@ commands() {
 	echo "Commands:
 	-h: returns the help message
 	-c (dev or beta): returns the commit hash of the specified, most recent version
-	-v (dev or beta or commit hash): returns the version of the specified, most recent version, or of the commit hash specified
+	-v (dev or beta or commit hash or version): returns the version of the specified, most recent version, or of the commit hash  or version specified
 	-l: returns the current local version
 	-u (dev or beta or commit hash): updates to most recent version of dev or beta selected, or of a specified commit hash"
 }
@@ -44,7 +44,7 @@ getsomehelp() {
 	4. Execute this file with the argument '-u (commit hash)'"
 	echo
 	echo "Troubleshooting Steps:
-	1. Make sure you have 'curl' and 'wget' installed on your computer
+	1. Make sure you have 'curl' installed on your computer
 	2. Confirm the directory in which you have your dolphin files is within your home directory and named 'dolphin-emu'
 	3. Confirm that the build directory within the dolphin directory is named 'Build'
 	4. Ensure you have copied the entire, correct commit code for the version you want
@@ -120,14 +120,14 @@ while getopts ":h(help):lc:u:v:" option; do
 		u)
 			if [[ $OPTARG == "dev" || $OPTARG == "development" ]];
 				then
-					commit_code="`wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'version always-ltr' | head -6 | tail -1 | cut -c 67-106`"
+					commit_code="`curl "https://dolphin-emu.org/download/" 2>/dev/null \ | grep 'version always-ltr' | head -6 | tail -1 | cut -c 67-106`"
 					current_check
 					do-it
 					exit
 				else
 					if [[ $OPTARG == "beta" ]];
 						then
-							commit_code="`wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 67-106`"
+							commit_code="`curl "https://dolphin-emu.org/download/" 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 67-106`"
 							current_check
 							do-it
 							exit
@@ -143,7 +143,7 @@ while getopts ":h(help):lc:u:v:" option; do
 			if [[ $OPTARG == "dev" || $OPTARG == "development" ]];
 				then
 					new_beta
-					version="`wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'version always-ltr' | head -6 | tail -1 | cut -c 67-106`"
+					version="`curl "https://dolphin-emu.org/download/" 2>/dev/null \ | grep 'version always-ltr' | head -6 | tail -1 | cut -c 67-106`"
 					echo "The most recent development commit hash is: $version"
 					if [ $version == $current_version_commit ]; then
 						echo "This is your current version"
@@ -152,7 +152,7 @@ while getopts ":h(help):lc:u:v:" option; do
 					if [[ $OPTARG == "beta" ]];
 						then
 							new_beta
-							version="`wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 67-106`"
+							version="`curl "https://dolphin-emu.org/download/" 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 67-106`"
 							echo "The most recent beta(official) commit hash is: $version"
 							if [ $version == $current_version_commit ]; then
 								echo "This is your current version"
@@ -166,7 +166,7 @@ while getopts ":h(help):lc:u:v:" option; do
 			if [[ $OPTARG == "dev" || $OPTARG == "development" ]];
 				then
 					new_beta
-					version="`wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'Download the latest version of the Dolphin Emulator' -m 1 | cut -c 96-104`"
+					version="`curl "https://dolphin-emu.org/download/" 2>/dev/null \ | grep 'Download the latest version of the Dolphin Emulator' -m 1 | cut -c 96-104`"
 					echo "The most recent development version is: $version"
 					if [ $version == $current_version ]; then
 						echo "This is your current version"
@@ -175,9 +175,9 @@ while getopts ":h(help):lc:u:v:" option; do
 					if [[ $OPTARG == "beta" ]];
 						then
 							new_beta
-							version="`wget --output-document=- https://dolphin-emu.org/download 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 110-118`"
+							version="`curl "https://dolphin-emu.org/download/" 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 110-118`"
 							echo "The most recent beta(official) version is: $version"
-							if [ $version == $current_version ]; then
+							if [[ $version == $current_version ]]; then
 								echo "This is your current version"
 							fi
 						else
@@ -194,7 +194,7 @@ while getopts ":h(help):lc:u:v:" option; do
 											fi
 									done
 								else
-									version="`wget --output-document=- https://dolphin-emu.org/download/dev/$OPTARG/ 2>/dev/null \ | grep 'Information on' | cut -c 50-65`"
+									version="`curl "https://dolphin-emu.org/download/dev/$OPTARG/" 2>/dev/null \ | grep 'Information on' | cut -c 50-65`"
 									if [[ $version == *"5."* || $version == *"3."* || $version == *"4."* ]];
 										then
 											while [[ $version == *"<"* ]];
