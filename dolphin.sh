@@ -20,6 +20,11 @@ binary_search()
 			    echo "The commit hash that corresponds with $OPTARG is $version_searched"
                 exit
             else
+				if [[ $mid == 0 ]];
+					then
+						echo "Error: Invalid option"
+						exit
+				fi
 				if [[ "`curl "https://dolphin-emu.org/download/list/master/$mid/" 2>/dev/null \ | grep -m1 "/download/dev"`" == *"$var_rel"* ]];
 					then
 						if [[ "`curl "https://dolphin-emu.org/download/list/master/$mid/" 2>/dev/null \ | grep "/download/dev" | tail -1`" == *"$var_rel"* ]];
