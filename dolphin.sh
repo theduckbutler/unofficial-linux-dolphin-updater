@@ -11,7 +11,7 @@ binary_search()
 	var+="${OPTARG}<"
 	var_rel="${var:0:3}"
 	var_ver="${OPTARG:4}"
-	while [ $low -lt $high ];  
+	while [ $low -le $high ];  
     do
         mid=$((( $low + $high )/2))
         if [[ "`curl "https://dolphin-emu.org/download/list/master/$mid/" 2>/dev/null \ | grep "/download/dev"`" == *"$var"* ]];
