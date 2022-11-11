@@ -4,6 +4,60 @@ if ! [[ "`cat /home/$(whoami)/dolphin-emu/.git/refs/heads/master`" == "`curl "ht
 	else
 		new_beta='0'
 fi
+binary_search()
+{
+	low=0
+	high="`curl "https://dolphin-emu.org/download/list/master/1/" 2>/dev/null \ | grep "/download/list/master/" | sed -n 'x;$p' | cut -c 40-42`"
+	var+="${OPTARG}<"
+	var_rel="${var:0:3}"
+	var_ver="${OPTARG:4}"
+	while [ $low -lt $high ];  
+    do
+        mid=$((( $low + $high )/2))
+        if [[ "`curl "https://dolphin-emu.org/download/list/master/$mid/" 2>/dev/null \ | grep "/download/dev"`" == *"$var"* ]];
+            then
+                version_searched="`curl "https://dolphin-emu.org/download/list/master/$mid/" 2>/dev/null \ | grep "/download/dev" | grep "$var" | cut -c 67-106`"
+			    echo "The commit hash that corresponds with $OPTARG is $version_searched"
+                exit
+            else
+				if [[ "`curl "https://dolphin-emu.org/download/list/master/$mid/" 2>/dev/null \ | grep -m1 "/download/dev"`" == *"$var_rel"* ]];
+					then
+						if [[ "`curl "https://dolphin-emu.org/download/list/master/$mid/" 2>/dev/null \ | grep "/download/dev" | tail -1`" == *"$var_rel"* ]];
+							then
+								version_searched="`curl "https://dolphin-emu.org/download/list/master/$mid/" 2</dev/null \ | grep -m1 "/download/dev" | cut -c 110-122`"
+								while [[ $version_searched == *"<"* ]];
+									do version_searched="`echo "$version_searched" | rev | cut -c2- | rev`"
+								done
+								version_searched=${version_searched:4}
+								if [ $var_ver -lt $version_searched ];
+									then
+										low=$((mid+1))
+									else
+										high=$((mid-1))
+								fi
+							else
+								high=$((mid-1))
+						fi
+					else
+						if [[ "`curl "https://dolphin-emu.org/download/list/master/$mid/" 2>/dev/null \ | grep "/download/dev" | tail -1`" == *"$var_rel"* ]];
+							then
+								low=$((mid+1))
+							else
+								version_searched="`curl "https://dolphin-emu.org/download/list/master/$mid/" 2>/dev/null \ | grep -m1 "/download/dev" | cut -c 110-112`"
+								if ! [[ $((10#${var_rel/.})) > $((10#${version_searched/.})) ]];
+									then
+										low=$((mid+1))
+									else
+										high=$((mid-1))
+								fi
+						fi
+				fi
+
+        fi
+        
+	done
+	echo "Error: Invalid option"
+}
 new_beta()
 {
 	if ! [[ $new_beta == '0' ]]; then
@@ -183,16 +237,7 @@ while getopts ":h(help):lc:u:v:" option; do
 						else
 							if [[ $OPTARG == *"."* ]];
 								then
-									version_pages="`curl "https://dolphin-emu.org/download/list/master/1/" 2>/dev/null \ | grep "/download/list/master/" | sed -n 'x;$p' | cut -c 40-42`"
-									for i in $( seq 1 $version_pages )
-										do
-											if [[ "`curl "https://dolphin-emu.org/download/list/master/$i/" 2>/dev/null \ | grep "/download/dev"`" == *"$OPTARG"* ]];
-												then
-													version_searched="`curl "https://dolphin-emu.org/download/list/master/$i/" 2>/dev/null \ | grep "/download/dev" | grep "$OPTARG" | cut -c 67-106`"
-													echo "The commit hash that corresponds with the version $OPTARG is $version_searched"
-													exit
-											fi
-									done
+									binary_search
 								else
 									version="`curl "https://dolphin-emu.org/download/dev/$OPTARG/" 2>/dev/null \ | grep 'Information on' | cut -c 50-65`"
 									if [[ $version == *"5."* || $version == *"3."* || $version == *"4."* ]];
