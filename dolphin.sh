@@ -18,6 +18,22 @@ binary_search()
             then
                 version_searched="`curl "https://dolphin-emu.org/download/list/master/$mid/" 2>/dev/null \ | grep "/download/dev" | grep "$var" | cut -c 67-106`"
 			    echo "The commit hash that corresponds with $OPTARG is $version_searched"
+				if [[ "`curl "https://dolphin-emu.org/download/list/master/$mid/" 2</dev/null | grep "amd64.deb"`" == *"${var::-1}"* ]];
+					then
+						echo "This version(${var::-1}) has an associated .deb download"
+						read -p "Download .deb file for ${var::-1}? [Y/n] "
+						if [[ ${REPLY::1} == "y" ]];
+							then
+								xdg-open "`curl "https://dolphin-emu.org/download/list/master/$mid/" 2</dev/null | grep "amd64.deb" | grep "${var::-1}" | cut -c 10-82`"
+								exit
+							elif [[ ${REPLY::1} == "n" ]];
+								then
+									exit
+							else
+								echo "Error: Invalid option"
+								exit
+						fi
+				fi
                 exit
             else
 				if [[ $mid == 0 ]];
