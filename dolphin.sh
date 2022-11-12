@@ -24,7 +24,11 @@ binary_search()
 						read -p "Download .deb file for ${var::-1}? [Y/n] "
 						if [[ ${REPLY::1} == "y" ]];
 							then
-								xdg-open "`curl "https://dolphin-emu.org/download/list/master/$mid/" 2</dev/null | grep "amd64.deb" | grep "${var::-1}" | cut -c 10-82`"
+								download_url="`curl "https://dolphin-emu.org/download/list/master/$mid/" 2</dev/null | grep "amd64.deb" | grep "${var::-1}" | cut -c 10-85`"
+								while ! [[ "${download_url:0-1}" == "b" ]];
+									do download_url="`echo "$download_url" | rev | cut -c2- | rev`"
+								done
+								xdg-open "$download_url"
 								exit
 							elif [[ ${REPLY::1} == "n" ]];
 								then
@@ -267,6 +271,26 @@ while getopts ":h(help):lc:u:v:" option; do
 												do version="`echo "$version" | rev | cut -c2- | rev`"
 											done
 											echo "The version that corresponds with the commit hash $OPTARG is $version"
+											if [[ "`curl "https://dolphin-emu.org/download/dev/$OPTARG/" 2</dev/null`" == *"amd64.deb"* ]];
+												then
+													echo "This commit hash($OPTARG) has an associated .deb download"
+													read -p "Download .deb file for $OPTARG? [Y/n] "
+													if [[ ${REPLY::1} == "y" ]];
+														then
+															download_url="`curl "https://dolphin-emu.org/download/dev/23e2301223460e23811048fe4aa576f169d0866e/" 2</dev/null | grep "amd64.deb" | cut -c 10-85`"
+															while ! [[ "${download_url:0-1}" == "b" ]];
+																do download_url="`echo "$download_url" | rev | cut -c2- | rev`"
+															done
+															xdg-open "$download_url"
+															exit
+														elif [[ ${REPLY::1} == "n" ]];
+															then
+																exit
+														else
+															echo "Error: Invalid option"
+															exit
+													fi
+											fi
 										else
 											echo "Error: Invalid option"
 									fi
