@@ -11,6 +11,11 @@ binary_search()
 	var+="${OPTARG}<"
 	var_rel="${var:0:3}"
 	var_ver="${OPTARG:4}"
+	if ! [[ "${var:1:1}" == "." && "${var:3:1}" == "-" && "${#var_ver}" -ge 1 ]];
+		then
+			echo "Error: Invalid option"
+			exit
+	fi
 	while [ $low -le $high ];  
     do
         mid=$((( $low + $high )/2))
@@ -32,6 +37,7 @@ binary_search()
 								exit
 							elif [[ ${REPLY::1} == "n" ]];
 								then
+									echo "Abort."
 									exit
 							else
 								echo "Error: Invalid option"
@@ -83,6 +89,14 @@ binary_search()
 	done
 	echo "Error: Invalid option"
 }
+check_commit()
+{
+	if ! [[ "${#OPTARG}" == 40 ]];
+		then
+			echo "Error: Invalid option"
+			exit
+	fi
+}
 new_beta()
 {
 	if ! [[ $new_beta == '0' ]]; then
@@ -105,8 +119,8 @@ current_check() {
 commands() {
 	echo "Commands:
 	-h: returns the help message
-	-c (dev or beta): returns the commit hash of the specified, most recent version
-	-v (dev or beta or commit hash or version): returns the version of the specified, most recent version, or of the commit hash  or version specified
+	-c (dev or beta or version): returns the commit hash of the specified, most recent version, or corresponding commit hash of specified version
+	-v (dev or beta or commit hash): returns the version of the specified, most recent version, or corresponding version of specified commit hash
 	-l: returns the current local version
 	-u (dev or beta or commit hash): updates to most recent version of dev or beta selected, or of a specified commit hash"
 }
@@ -211,6 +225,7 @@ while getopts ":h(help):lc:u:v:" option; do
 							do-it
 							exit
 						else
+							check_commit
 							commit_code=$OPTARG
 							current_check
 							do_it
@@ -237,7 +252,10 @@ while getopts ":h(help):lc:u:v:" option; do
 								echo "This is your current version"
 							fi
 						else
-							echo "Error: Invalid option"
+							if [[ $OPTARG == *"."* ]];
+								then
+									binary_search
+							fi
 					fi
 			fi
 			;;			
@@ -260,41 +278,36 @@ while getopts ":h(help):lc:u:v:" option; do
 								echo "This is your current version"
 							fi
 						else
-							if [[ $OPTARG == *"."* ]];
-								then
-									binary_search
-								else
-									version="`curl "https://dolphin-emu.org/download/dev/$OPTARG/" 2>/dev/null \ | grep 'Information on' | cut -c 50-65`"
-									if [[ $version == *"5."* || $version == *"3."* || $version == *"4."* ]];
-										then
-											while [[ $version == *"<"* ]];
-												do version="`echo "$version" | rev | cut -c2- | rev`"
-											done
-											echo "The version that corresponds with the commit hash $OPTARG is $version"
-											if [[ "`curl "https://dolphin-emu.org/download/dev/$OPTARG/" 2</dev/null`" == *"amd64.deb"* ]];
-												then
-													echo "This commit hash($OPTARG) has an associated .deb download"
-													read -p "Download .deb file for $OPTARG? [Y/n] "
-													if [[ ${REPLY::1} == "y" ]];
+							check_commit
+							version="`curl "https://dolphin-emu.org/download/dev/$OPTARG/" 2>/dev/null \ | grep 'Information on' | cut -c 50-65`"
+								if [[ $version == *"5."* || $version == *"3."* || $version == *"4."* ]];
+									then
+										while [[ $version == *"<"* ]];
+											do version="`echo "$version" | rev | cut -c2- | rev`"
+										done
+										echo "The version that corresponds with the commit hash $OPTARG is $version"
+										if [[ "`curl "https://dolphin-emu.org/download/dev/$OPTARG/" 2</dev/null`" == *"amd64.deb"* ]];
+											then
+												echo "This commit hash($OPTARG) has an associated .deb download"
+												read -p "Download .deb file for $OPTARG? [Y/n] "
+												if [[ ${REPLY::1} == "y" ]];
+													then
+														download_url="`curl "https://dolphin-emu.org/download/dev/$OPTARG/" 2</dev/null | grep "amd64.deb" | cut -c 10-85`"
+														while ! [[ "${download_url:0-1}" == "b" ]];
+															do download_url="`echo "$download_url" | rev | cut -c2- | rev`"
+														done
+														xdg-open "$download_url"
+														exit
+													elif [[ ${REPLY::1} == "n" ]];
 														then
-															download_url="`curl "https://dolphin-emu.org/download/dev/23e2301223460e23811048fe4aa576f169d0866e/" 2</dev/null | grep "amd64.deb" | cut -c 10-85`"
-															while ! [[ "${download_url:0-1}" == "b" ]];
-																do download_url="`echo "$download_url" | rev | cut -c2- | rev`"
-															done
-															xdg-open "$download_url"
+															echo "Abort."
 															exit
-														elif [[ ${REPLY::1} == "n" ]];
-															then
-																exit
-														else
-															echo "Error: Invalid option"
-															exit
-													fi
-											fi
-										else
-											echo "Error: Invalid option"
-									fi
-							fi
+													else
+														echo "Error: Invalid option"
+														exit
+												fi
+										fi
+								fi
 					fi
 			fi
 			;;
