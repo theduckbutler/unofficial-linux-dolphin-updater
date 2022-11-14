@@ -45,47 +45,40 @@ binary_search()
 						fi
 				fi
                 exit
-            else
-				if [[ $mid == 0 ]];
+            elif [[ $mid == 0 ]];
+				then
+					echo "Error: Invalid option"
+					exit
+			elif [[ "`curl "https://dolphin-emu.org/download/list/master/$mid/" 2>/dev/null \ | grep -m1 "/download/dev"`" == *"$var_rel"* ]];
+				then
+					if [[ "`curl "https://dolphin-emu.org/download/list/master/$mid/" 2>/dev/null \ | grep "/download/dev" | tail -1`" == *"$var_rel"* ]];
+						then
+							version_searched="`curl "https://dolphin-emu.org/download/list/master/$mid/" 2</dev/null \ | grep -m1 "/download/dev" | cut -c 110-122`"
+							while [[ $version_searched == *"<"* ]];
+								do version_searched="`echo "$version_searched" | rev | cut -c2- | rev`"
+							done
+							version_searched=${version_searched:4}
+							if [ $var_ver -lt $version_searched ];
+								then
+									low=$((mid+1))
+								else
+									high=$((mid-1))
+							fi
+						else
+							high=$((mid-1))
+					fi
+				elif [[ "`curl "https://dolphin-emu.org/download/list/master/$mid/" 2>/dev/null \ | grep "/download/dev" | tail -1`" == *"$var_rel"* ]];
 					then
-						echo "Error: Invalid option"
-						exit
-				fi
-				if [[ "`curl "https://dolphin-emu.org/download/list/master/$mid/" 2>/dev/null \ | grep -m1 "/download/dev"`" == *"$var_rel"* ]];
-					then
-						if [[ "`curl "https://dolphin-emu.org/download/list/master/$mid/" 2>/dev/null \ | grep "/download/dev" | tail -1`" == *"$var_rel"* ]];
-							then
-								version_searched="`curl "https://dolphin-emu.org/download/list/master/$mid/" 2</dev/null \ | grep -m1 "/download/dev" | cut -c 110-122`"
-								while [[ $version_searched == *"<"* ]];
-									do version_searched="`echo "$version_searched" | rev | cut -c2- | rev`"
-								done
-								version_searched=${version_searched:4}
-								if [ $var_ver -lt $version_searched ];
-									then
-										low=$((mid+1))
-									else
-										high=$((mid-1))
-								fi
-							else
-								high=$((mid-1))
-						fi
+						low=$((mid+1))
 					else
-						if [[ "`curl "https://dolphin-emu.org/download/list/master/$mid/" 2>/dev/null \ | grep "/download/dev" | tail -1`" == *"$var_rel"* ]];
+						version_searched="`curl "https://dolphin-emu.org/download/list/master/$mid/" 2>/dev/null \ | grep -m1 "/download/dev" | cut -c 110-112`"
+						if ! [[ $((10#${var_rel/.})) > $((10#${version_searched/.})) ]];
 							then
 								low=$((mid+1))
 							else
-								version_searched="`curl "https://dolphin-emu.org/download/list/master/$mid/" 2>/dev/null \ | grep -m1 "/download/dev" | cut -c 110-112`"
-								if ! [[ $((10#${var_rel/.})) > $((10#${version_searched/.})) ]];
-									then
-										low=$((mid+1))
-									else
-										high=$((mid-1))
-								fi
+								high=$((mid-1))
 						fi
-				fi
-
-        fi
-        
+        fi       
 	done
 	echo "Error: Invalid option"
 }
@@ -109,6 +102,7 @@ version() {
 }
 proceed() {
 	exec bash "${BASH_SOURCE}"
+
 }
 current_check() {
 	if [[ $current_version_commit == $commit_code ]]; then
@@ -217,20 +211,18 @@ while getopts ":h(help):lc:u:v:" option; do
 					current_check
 					do-it
 					exit
-				else
-					if [[ $OPTARG == "beta" ]];
+				elif [[ $OPTARG == "beta" ]];
 						then
 							commit_code="`curl "https://dolphin-emu.org/download/" 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 67-106`"
 							current_check
 							do-it
 							exit
-						else
-							check_commit
-							commit_code=$OPTARG
-							current_check
-							do_it
-							exit
-					fi
+				else
+					check_commit
+					commit_code=$OPTARG
+					current_check
+					do_it
+					exit
 			fi
 			;;
 		c)
@@ -242,21 +234,19 @@ while getopts ":h(help):lc:u:v:" option; do
 					if [ $version == $current_version_commit ]; then
 						echo "This is your current version"
 					fi
+				elif [[ $OPTARG == "beta" ]];
+					then
+						new_beta
+						version="`curl "https://dolphin-emu.org/download/" 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 67-106`"
+						echo "The most recent beta(official) commit hash is: $version"
+						if [ $version == $current_version_commit ]; then
+							echo "This is your current version"
+						fi
+				elif [[ $OPTARG == *"."* ]];
+							then
+								binary_search
 				else
-					if [[ $OPTARG == "beta" ]];
-						then
-							new_beta
-							version="`curl "https://dolphin-emu.org/download/" 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 67-106`"
-							echo "The most recent beta(official) commit hash is: $version"
-							if [ $version == $current_version_commit ]; then
-								echo "This is your current version"
-							fi
-						else
-							if [[ $OPTARG == *"."* ]];
-								then
-									binary_search
-							fi
-					fi
+					echo "Error: Invalid option"
 			fi
 			;;			
 		v)
@@ -268,47 +258,45 @@ while getopts ":h(help):lc:u:v:" option; do
 					if [ $version == $current_version ]; then
 						echo "This is your current version"
 					fi
-				else
-					if [[ $OPTARG == "beta" ]];
-						then
-							new_beta
-							version="`curl "https://dolphin-emu.org/download/" 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 110-118`"
-							echo "The most recent beta(official) version is: $version"
-							if [[ $version == $current_version ]]; then
-								echo "This is your current version"
-							fi
-						else
-							check_commit
-							version="`curl "https://dolphin-emu.org/download/dev/$OPTARG/" 2>/dev/null \ | grep 'Information on' | cut -c 50-65`"
-								if [[ $version == *"5."* || $version == *"3."* || $version == *"4."* ]];
-									then
-										while [[ $version == *"<"* ]];
-											do version="`echo "$version" | rev | cut -c2- | rev`"
-										done
-										echo "The version that corresponds with the commit hash $OPTARG is $version"
-										if [[ "`curl "https://dolphin-emu.org/download/dev/$OPTARG/" 2</dev/null`" == *"amd64.deb"* ]];
-											then
-												echo "This commit hash($OPTARG) has an associated .deb download"
-												read -p "Download .deb file for $OPTARG? [Y/n] "
-												if [[ ${REPLY::1} == "y" ]];
+				elif [[ $OPTARG == "beta" ]];
+					then
+						new_beta
+						version="`curl "https://dolphin-emu.org/download/" 2>/dev/null \ | grep 'version always-ltr' -m 1 | cut -c 110-118`"
+						echo "The most recent beta(official) version is: $version"
+						if [[ $version == $current_version ]]; then
+							echo "This is your current version"
+						fi
+					else
+						check_commit
+						version="`curl "https://dolphin-emu.org/download/dev/$OPTARG/" 2>/dev/null \ | grep 'Information on' | cut -c 50-65`"
+							if [[ $version == *"5."* || $version == *"3."* || $version == *"4."* ]];
+								then
+									while [[ $version == *"<"* ]];
+										do version="`echo "$version" | rev | cut -c2- | rev`"
+									done
+									echo "The version that corresponds with the commit hash $OPTARG is $version"
+									if [[ "`curl "https://dolphin-emu.org/download/dev/$OPTARG/" 2</dev/null`" == *"amd64.deb"* ]];
+										then
+											echo "This commit hash($OPTARG) has an associated .deb download"
+											read -p "Download .deb file for $OPTARG? [Y/n] "
+											if [[ ${REPLY::1} == "y" ]];
+												then
+													download_url="`curl "https://dolphin-emu.org/download/dev/$OPTARG/" 2</dev/null | grep "amd64.deb" | cut -c 10-85`"
+													while ! [[ "${download_url:0-1}" == "b" ]];
+														do download_url="`echo "$download_url" | rev | cut -c2- | rev`"
+													done
+													xdg-open "$download_url"
+													exit
+												elif [[ ${REPLY::1} == "n" ]];
 													then
-														download_url="`curl "https://dolphin-emu.org/download/dev/$OPTARG/" 2</dev/null | grep "amd64.deb" | cut -c 10-85`"
-														while ! [[ "${download_url:0-1}" == "b" ]];
-															do download_url="`echo "$download_url" | rev | cut -c2- | rev`"
-														done
-														xdg-open "$download_url"
+														echo "Abort."
 														exit
-													elif [[ ${REPLY::1} == "n" ]];
-														then
-															echo "Abort."
-															exit
-													else
-														echo "Error: Invalid option"
-														exit
-												fi
-										fi
-								fi
-					fi
+												else
+													echo "Error: Invalid option"
+													exit
+											fi
+									fi
+							fi
 			fi
 			;;
 		l)
